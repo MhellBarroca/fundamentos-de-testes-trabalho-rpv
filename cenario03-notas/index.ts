@@ -58,40 +58,60 @@ const alunos: IAluno[] = [
 // ==================== FUNÇÕES A IMPLEMENTAR ====================
 
 function calcularMedia(alunoId: number): IResultadoMedia {
-    // TODO: Implementar a lógica seguindo as regras de negócio
-    //
-    // Passos sugeridos:
     // 1. Buscar o aluno pelo id
-    // 2. Verificar se o aluno existe
-    // 3. Verificar se todas as notas estão entre 0 e 10
-    // 4. Calcular a média ponderada: (P1×1 + P2×1 + P3×2 + P4×2) / 6
-    // 5. Calcular bônus: presença >= 75% → +0.5 | entregou trabalhos → +1.0
-    // 6. Média final = média + bônus (máximo 10)
+    const aluno = alunos.find(a => a.id === alunoId)
 
-    return {
-        media: 0,
-        bonus: 0,
-        mediaFinal: 0,
-        ehValido: false
+    // 2. Verificar se o aluno existe
+    if (!aluno) {
+        return { media: 0, bonus: 0, mediaFinal: 0, ehValido: false }
     }
+
+    // 3. Verificar se todas as notas estão entre 0 e 10
+    const { p1, p2, p3, p4 } = aluno.notas
+    const notasValidas = [p1, p2, p3, p4].every(nota => nota >= 0 && nota <= 10)
+    if (!notasValidas) {
+        return { media: 0, bonus: 0, mediaFinal: 0, ehValido: false }
+    }
+
+    // 4. Calcular média ponderada: (P1×1 + P2×1 + P3×2 + P4×2) / 6
+    const media = (p1 * 1 + p2 * 1 + p3 * 2 + p4 * 2) / 6
+
+    // 5. Calcular bônus: presença >= 75% → +0.5 | entregou trabalhos → +1.0
+    let bonus = 0
+    if (aluno.presenca >= 75) bonus += 0.5
+    if (aluno.entregouTrabalhos) bonus += 1.0
+
+    // 6. Média final = média + bônus (máximo 10)
+    const mediaFinal = Math.min(media + bonus, 10)
+
+    return { media, bonus, mediaFinal, ehValido: true }
 }
 
 function verificarAprovacao(alunoId: number): IResultadoAprovacao {
-    // TODO: Implementar a lógica seguindo as regras de negócio
-    //
-    // Passos sugeridos:
     // 1. Chamar calcularMedia(alunoId) para obter a média final
+    const resultado = calcularMedia(alunoId)
+
     // 2. Se a média não é válida, retornar inválido
+    if (!resultado.ehValido) {
+        return { situacao: '', mediaFinal: 0, ehValido: false }
+    }
+
+    const { mediaFinal } = resultado
+
     // 3. Verificar a situação:
     //    - mediaFinal >= 7 → "aprovado"
     //    - mediaFinal >= 5 e < 7 → "recuperacao"
     //    - mediaFinal < 5 → "reprovado"
-
-    return {
-        situacao: '',
-        mediaFinal: 0,
-        ehValido: false
+    let situacao: IResultadoAprovacao['situacao']
+    if (mediaFinal >= 7) {
+        situacao = 'aprovado'
+    } else if (mediaFinal >= 5) {
+        situacao = 'recuperacao'
+    } else {
+        situacao = 'reprovado'
     }
+
+    return { situacao, mediaFinal, ehValido: true }
 }
 
 // ==================== TESTES ====================
