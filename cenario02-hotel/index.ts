@@ -48,23 +48,34 @@ const quartos: IQuarto[] = [
 // ==================== FUNÇÃO A IMPLEMENTAR ====================
 
 function calcularReserva(reserva: IReserva): IResultadoReserva {
-    // TODO: Implementar a lógica seguindo as regras de negócio
-    //
-    // Passos sugeridos:
     // 1. Buscar o quarto pelo quartoId
-    // 2. Validar: quarto existe, noites entre 1-30, hóspedes dentro da capacidade
-    // 3. Calcular valor da diária base (precoNoite do quarto)
-    // 4. Se alta temporada (mes 12, 1 ou 2): diária *= 1.30
-    // 5. Se 3+ noites: desconto = 10% sobre (diária × noites)
-    // 6. Se café da manhã: adicionar R$ 30 por noite
-    // 7. Calcular valorTotal: (diária × noites) - desconto + (café × noites)
+    const quarto = quartos.find(q => q.id === reserva.quartoId)
 
-    return {
-        valorDiaria: 0,
-        valorTotal: 0,
-        desconto: 0,
-        ehValida: false
+    // 2. Validar: quarto existe, noites entre 1-30, hóspedes dentro da capacidade
+    if (!quarto || reserva.noites < 1 || reserva.noites > 30 || reserva.hospedes > quarto.capacidade) {
+        return { valorDiaria: 0, valorTotal: 0, desconto: 0, ehValida: false }
     }
+
+    // 3. Calcular valor da diária base
+    let valorDiaria = quarto.precoNoite
+
+    // 4. Alta temporada (meses 12, 1 ou 2): acréscimo de 30%
+    const altaTemporada = [12, 1, 2].includes(reserva.mes)
+    if (altaTemporada) {
+        valorDiaria = Math.round(valorDiaria * 1.30 * 100) / 100
+    }
+
+    // 5. Desconto de 10% nas diárias para 3+ noites (sobre diária × noites, antes do café)
+    const totalDiarias = valorDiaria * reserva.noites
+    const desconto = reserva.noites >= 3 ? Math.round(totalDiarias * 0.10 * 100) / 100 : 0
+
+    // 6. Café da manhã: R$ 30 por noite
+    const totalCafe = reserva.cafeDaManha ? 30 * reserva.noites : 0
+
+    // 7. Calcular valorTotal: (diária × noites) - desconto + (café × noites)
+    const valorTotal = Math.round((totalDiarias - desconto + totalCafe) * 100) / 100
+
+    return { valorDiaria, valorTotal, desconto, ehValida: true }
 }
 
 // ==================== TESTES ====================
